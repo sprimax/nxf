@@ -107,7 +107,7 @@ process makeSummary2{
 	output:
 	path "summary2.csv"
 	"""
-		rm -f summary2.csv; for f in \$(ls split*_count.txt); do echo -n "$f, " >> summary2.csv; cat $f >> summary2.csv; done
+		rm -f summary2.csv; for f in \$(ls split*_count.txt); do echo -n "\$f, " >> summary2.csv; cat \$f >> summary2.csv; done
 	"""
 
 }
@@ -118,9 +118,11 @@ workflow {
 
     /// downloadFile | countSeqs
     /// channel1 = ( process1 | process2 | process3)
+	downloadFile | splitSequences | flatten | countRepeats2 | collect | makeSummary
+/*
 	downloadChannel = downloadFile()
-	countSeq(downloadChannel)
-	countRepeats(downloadChannel)
+	pcountSeq = countSeq(downloadChannel)
+	pcountRepeats = countRepeats(downloadChannel)
 	singlefastas = splitSequences(downloadChannel).flatten()
 	x = countRepeats2(singlefastas).collect()
 	
@@ -130,7 +132,8 @@ workflow {
 	// singlefastas = splitSequences(downloadChannel)
 	// .flatten() enables to go through every single file
 	// without flatten it will go through all the documents and gives out the sum
-	
-	countBases(singlefastas)
+
+	pcountBases = countBases(singlefastas)
 	makeSummary(x)
+*/	
 }
