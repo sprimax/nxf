@@ -18,7 +18,6 @@ process unsedPro {
 
 process downloadFile {
 	storeDir params.store
-	publishDir "${projectDir}/output", mode: "copy", overwrite: true
 	output:
 		path "batch1.fasta"
 	"""
@@ -27,8 +26,6 @@ process downloadFile {
 }
 
 process splitSequences {
-    
-	publishDir params.out, mode: "copy", overwrite: true
     input:
         path inputfile
 	output:
@@ -40,9 +37,8 @@ process splitSequences {
 }
 
 process countSeq {
-	publishDir "${projectDir}/output", mode: "copy", overwrite: true
 	input:
-		path fastafile // creates a link to the original input file. it is not a copy
+		path fastafile
 	output:
 		path "numseqs.txt"
 	"""
@@ -51,23 +47,17 @@ process countSeq {
 }
 
 process countBases {
-publishDir params.out, mode: 'copy', overwrite: true
-input:
-path infasta
-output:
-path "${infasta.getSimpleName()}_basecount.txt"
-"""
-tail -n 1 ${infasta} | wc -m > ${infasta.getSimpleName()}_basecount.txt
-"""
-// tail -n 1 ${fastafile} | tr -d '\n' | wc -m
-// line breaks are counted thus numbers are wrong by +1
-// this removes the linebreaks
-
+	input:
+	path infasta
+	output:
+	path "${infasta.getSimpleName()}_basecount.txt"
+	"""
+		tail -n 1 ${infasta} | wc -m > ${infasta.getSimpleName()}_basecount.txt
+	"""
 }
 
 
 process countRepeats{
-	publishDir params.out, mode: 'copy', overwrite: true
 	input:
 	path inputfile
 	output:
@@ -78,7 +68,6 @@ process countRepeats{
 }
 
 process countRepeats2{
-	publishDir params.out, mode: 'copy', overwrite: true
 	input:
 	path inputfiles
 	output:
@@ -115,25 +104,5 @@ process makeSummary2{
 
 
 workflow {
-
-    /// downloadFile | countSeqs
-    /// channel1 = ( process1 | process2 | process3)
 	downloadFile | splitSequences | flatten | countRepeats2 | collect | makeSummary
-/*
-	downloadChannel = downloadFile()
-	pcountSeq = countSeq(downloadChannel)
-	pcountRepeats = countRepeats(downloadChannel)
-	singlefastas = splitSequences(downloadChannel).flatten()
-	x = countRepeats2(singlefastas).collect()
-	
-	// gives an error when not commented out
-	// splitSequences(downloadChannel)
-
-	// singlefastas = splitSequences(downloadChannel)
-	// .flatten() enables to go through every single file
-	// without flatten it will go through all the documents and gives out the sum
-
-	pcountBases = countBases(singlefastas)
-	makeSummary(x)
-*/	
 }
