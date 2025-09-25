@@ -18,11 +18,11 @@ process splitSequences {
     
 	publishDir params.out, mode: "copy", overwrite: true
     input:
-        path infile
+        path inputfile
 	output:
 		path "Seq_*.fasta"
 	"""
-		split -l 2 -d --additional-suffix .fasta ${infile} params.prefix
+		split -l 2 -d --additional-suffix .fasta ${inputfile} ${params.prefix}
 	"""
 }
 
