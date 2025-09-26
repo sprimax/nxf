@@ -86,7 +86,7 @@ process makeSummary2{
 	output:
 	path "summary2.csv"
 	"""
-		rm -f summary2.csv; for f in \$(ls split*_count.txt); do echo -n "\$f, " >> summary2.csv; cat \$f >> summary2.csv; done
+		rm -f summary2.csv; for f in \$(ls Seq_*_repeatcount.txt); do echo -n "\$f, " >> summary2.csv; cat \$f >> summary2.csv; done
 	"""
 
 }
@@ -99,7 +99,7 @@ process makeSummary3{
 	output:
 	path "summary3.csv"
 	"""
-		for i in ${infiles}; do
+		for i in ${inputfiles}; do
 			echo -n "\$i" | cut -d "_" -f 2 | tr -d "\n"
 			echo -n ", "
 			cat \$i
@@ -108,7 +108,9 @@ process makeSummary3{
 	"""
 
 }
-
+// cut out number of file
+// , space behind number
+//content of file
 
 workflow {
 	downloadFile | splitSequences | flatten | countRepeats2 | collect | makeSummary
