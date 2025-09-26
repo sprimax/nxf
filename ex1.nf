@@ -6,7 +6,7 @@ params.prefix = "Seq_"
 params.fileformat = ".fasta"
 
 
-process unsedPro {
+process unUsedPro {
     input:
         path inputfile
 	output:
@@ -43,16 +43,6 @@ process countSeq {
 		path "numseqs.txt"
 	"""
 		grep ">" ${fastafile} | wc -l > numseqs.txt
-	"""
-}
-
-process countBases {
-	input:
-	path infasta
-	output:
-	path "${infasta.getSimpleName()}_basecount.txt"
-	"""
-		tail -n 1 ${infasta} | wc -m > ${infasta.getSimpleName()}_basecount.txt
 	"""
 }
 
@@ -101,6 +91,23 @@ process makeSummary2{
 
 }
 
+// Luise Version with cut and sort
+process makeSummary3{
+	publishDir params.out, mode: 'copy', overwrite: true
+	input:
+	path inputfiles
+	output:
+	path "summary3.csv"
+	"""
+		for i in ${infiles}; do
+			echo -n "\$i" | cut -d "_" -f 2 | tr -d "\n"
+			echo -n ", "
+			cat \$i
+		done > summary_unsorted.csv
+		cat summary_unsorted.csv | sort > summary3.csv
+	"""
+
+}
 
 
 workflow {
