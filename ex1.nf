@@ -4,6 +4,7 @@ params.downloadurl = "https://tinyurl.com/cqbatch1"
 params.store = "${projectDir}/downloads"
 params.prefix = "Seq_"
 params.fileformat = ".fasta"
+params.indir = "input/"
 
 
 process unUsedPro {
@@ -113,5 +114,9 @@ process makeSummary3{
 //content of file
 
 workflow {
-	downloadFile | splitSequences | flatten | countRepeats2 | collect | makeSummary
+	// fastafile = Channel.fromPath("${params.indir}*${params.fileformat}")
+	c1 = (downloadFile | splitSequences | flatten | countRepeats2 | collect)
+	makeSummary(c1)
+	makeSummary2(c1)
+	// downloadFile | splitSequences | flatten | countRepeats2 | collect | makeSummary
 }
