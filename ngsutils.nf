@@ -32,7 +32,7 @@ process fastDump2 {
 	input:
 		path input
 	output:
-		path "${input}"
+		path "${input}.fastq"
 	"""
 		fastq-dump --split-3 ${input}
 	"""
@@ -45,24 +45,13 @@ process ngsUtils {
 	input:
 		path input
 	output:
-		path "${input.baseName}*_stats.txt"
+		path "stats.txt"
 	"""
-		fastqutils stats ${input} > ${input.baseName}_stats.txt
+		fastqutils stats ${input} > stats.txt
 	"""
 }
 
 
-process ngsUtils2 {
-	publishDir params.out, mode: 'copy', overwrite: true
-	container "https://depot.galaxyproject.org/singularity/ngsutils%3A0.5.9--py27h9801fc8_5"
-	input:
-		path fastq_file from params.input_fastq
-	output:
-		path "stats/*.txt"
-	"""
-		fastq-utils stats $fastq_file > stats/${fastq_file.baseName}.stats.txt
-	"""
-}
 
 
 workflow {
