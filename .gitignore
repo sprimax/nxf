@@ -3,3 +3,10 @@
 work/
 downloads/
 output/
+..gitignore.swp
+dag.html
+report.html
+sam.fasta
+singularity_containers/
+test/
+timeline.html
