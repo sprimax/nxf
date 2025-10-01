@@ -45,18 +45,10 @@ process ngsUtils {
 	input:
 		path fastqfile
 	output:
-		path "stats.txt"
-	script:
-if (params.with_stats = true){
-
+		path "SRRstats.txt"
 	"""
-		fastqutils stats ${fastqfile} > stats.txt
+		fastqutils stats ${fastqfile} > SRRstats.txt
 	"""
-	} else {
-		"""
-		echo "No Stats - run with --with_stats"
-		"""
-	}
 }
 
 
@@ -67,16 +59,9 @@ process fastQC {
 		path fastqfile
 	output:
 		path "${fastqfile.getSimpleName()}*"
-	script:
-if (params.with_fastqc = true){
 	"""
 		fastqc ${fastqfile}
 	"""
-} else {
-	"""
-		echo "No FastQC run with --with_fastqc"
-	"""
-}
 }
 
 
@@ -84,7 +69,12 @@ if (params.with_fastqc = true){
 
 workflow {
 	c1 = (prefetch | fastDump2)
-		ngsUtils(c1)
-	fastQC(c1)
 
+	if (params.with_stats){
+		ngsUtils(c1)
+	}
+	
+	if (params.with_fastqc){
+		fastQC(c1)
+	}
 }
