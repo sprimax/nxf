@@ -1,10 +1,12 @@
 params.SRR = "SRR1777174"
 params.out = "${projectDir}/output"
 params.store = "${projectDir}/downloads"
+params.with_fastqc = false
+params.with_stats = false
 
 
 process prefetch {
-	publishDir params.store, mode: 'copy', overwrite: true
+	storeDir params.store
 	container "https://depot.galaxyproject.org/singularity/sra-tools%3A3.2.1--h4304569_1"
 	output:
 		path "${params.SRR}"
@@ -14,27 +16,25 @@ process prefetch {
 }
 
 process fastDump {
-	publishDir params.out, mode: 'copy', overwrite: true
 	container "https://depot.galaxyproject.org/singularity/sra-tools%3A3.2.1--h4304569_1"
 	input:
-		path input
+		path inputsrr
 	output:
-		path "${input}*.fastq"
+		path "${inputsrr.getSimpleName()}*.fastq"
 	"""
-		fastq-dump --split-files ${input}
+		fastq-dump --split-files ${inputsrr}
 	"""
 }
 
 
 process fastDump2 {
-	publishDir params.out, mode: 'copy', overwrite: true
 	container "https://depot.galaxyproject.org/singularity/sra-tools%3A3.2.1--h4304569_1"
 	input:
-		path input
+		path inputsrr
 	output:
-		path "${input}.fastq"
+		path "${inputsrr.getSimpleName()}.fastq"
 	"""
-		fastq-dump --split-3 ${input}
+		fastq-dump --split-3 ${inputsrr}
 	"""
 }
 
@@ -43,18 +43,48 @@ process ngsUtils {
 	publishDir params.out, mode: 'copy', overwrite: true
 	container "https://depot.galaxyproject.org/singularity/ngsutils%3A0.5.9--py27h9801fc8_5"
 	input:
-		path input
+		path fastqfile
 	output:
 		path "stats.txt"
+	script:
+if (params.with_stats = true){
+
 	"""
-		fastqutils stats ${input} > stats.txt
+		fastqutils stats ${fastqfile} > stats.txt
 	"""
+	} else {
+		"""
+		echo "No Stats - run with --with_stats"
+		"""
+	}
+}
+
+
+process fastQC {
+	publishDir params.out, mode: 'copy', overwrite: true
+	container "https://depot.galaxyproject.org/singularity/fastqc%3A0.12.1--hdfd78af_0"
+	input:
+		path fastqfile
+	output:
+		path "${fastqfile.getSimpleName()}*"
+	script:
+if (params.with_fastqc = true){
+	"""
+		fastqc ${fastqfile}
+	"""
+} else {
+	"""
+		echo "No FastQC run with --with_fastqc"
+	"""
+}
 }
 
 
 
 
 workflow {
-	(prefetch | fastDump2 | ngsUtils)
+	c1 = (prefetch | fastDump2)
+		ngsUtils(c1)
+	fastQC(c1)
 
 }
