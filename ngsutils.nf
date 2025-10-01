@@ -4,12 +4,20 @@ params.store = "${projectDir}/downloads"
 params.with_stats = false
 params.with_fastqc = false
 params.with_fastp = false
+params.accessionNs ="${projectDir}/accessions.txt"
+/*
+params.cut_window_size = 
+params.cut_mean_quality
+params.length_required
+params.average_qual
 
-
+*/
 
 process prefetch {
 	storeDir params.store
 	container "https://depot.galaxyproject.org/singularity/sra-tools%3A3.2.1--h4304569_1"
+	//input:
+	//	val accession
 	output:
 		path "${params.SRR}"
 	"""
@@ -74,16 +82,37 @@ process fastp {
 		path fastqfile
 	output:
 		path "SRRpout.fastq"
+		//path "${fastqfile.getSimpleName}_fastp.html"
+		//path "${fastqfile.getSimpleName}_fastp.json"
 		path "fastp.html"
 		path "fastp.json"
 	"""
 		fastp -i ${fastqfile} -o SRRpout.fastq
 	"""
 
+// fastp -i ${fastqfile} -o SRRpout.fastq -h ${fastqfile.getSimpleName}_fastp.html j- ${fastqfile.getSimpleName}_fastp.json
+
 // fastp -i in.fq -o out.fq
 }
 
 process fastp2 {
+	publishDir params.out, mode: 'copy', overwrite: true
+	container "https://depot.galaxyproject.org/singularity/fastp%3A1.0.1--heae3180_0"
+	input:
+		path fastqfile
+	output:
+		path "SRRpout.fastq"
+		path "${fastqfile}_fastp.html"
+		path "${fastqfile}_fastp.json"
+	"""
+		fastp -i ${fastqfile} -o SRRpout.fastq -h ${fastqfile}_fastp.html -j ${fastqfile}_fastp.json
+	"""
+
+// fastp -i ${fastqfile} -o SRRpout.fastq --html ${fastqfile.getSimpleName}_fastp.html --json ${fastqfile.getSimpleName}_fastp.json
+}
+
+
+process fastp3 {
 	publishDir params.out, mode: 'copy', overwrite: true
 	container "https://depot.galaxyproject.org/singularity/fastp%3A1.0.1--heae3180_0"
 	input:
@@ -98,32 +127,28 @@ process fastp2 {
 
 
 workflow {
+
+// accessions = channel.fromPath(params.accessionNs).splitText().map{it -> it.trim()}
+
 	c1 = (prefetch | fastDump2)
 
-	if (params.with_stats){
-		ngsUtils(c1)
-	} else {
-		print("No Stats - Add --with_stats to nextflow command")
-	}
-	
-
-
-	if (params.with_fastqc){
-		fastQC(c1)
-	} else {
-		print("No FastQC - Add --with_fastqc to nextflow command")
-	}
-
-
+/*
 if (params.with_fastp){
+	if (params.with_stats && params.with_fastqc){
+		fastqp_ch = fastp(c1)
+		both_ch = c1.concat(channel2)
+		ngsUtils(both_ch)
+	}
 		fastp(c1)
 	} else {
 		print("No FastP - Add --with_fastp to nextflow command")
 	}
-
-	fastp(c1)
+*/
+	fastp2(c1)
 
 }
+
+// singularity.runOptions = "--writable-tmpfs"
 
 //Luis Version
 /*
@@ -138,3 +163,4 @@ if (params.with_fastp){
    
    prefetch | split | c_run
    */
+
