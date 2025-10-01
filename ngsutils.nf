@@ -1,8 +1,10 @@
 params.SRR = "SRR1777174"
 params.out = "${projectDir}/output"
 params.store = "${projectDir}/downloads"
-params.with_fastqc = false
 params.with_stats = false
+params.with_fastqc = false
+params.with_fastp = false
+
 
 
 process prefetch {
@@ -65,6 +67,34 @@ process fastQC {
 }
 
 
+process fastp {
+	publishDir params.out, mode: 'copy', overwrite: true
+	container "https://depot.galaxyproject.org/singularity/fastp%3A1.0.1--heae3180_0"
+	input:
+		path fastqfile
+	output:
+		path "SRRpout.fastq"
+		path "fastp.html"
+		path "fastp.json"
+	"""
+		fastp -i ${fastqfile} -o SRRpout.fastq
+	"""
+
+// fastp -i in.fq -o out.fq
+}
+
+process fastp2 {
+	publishDir params.out, mode: 'copy', overwrite: true
+	container "https://depot.galaxyproject.org/singularity/fastp%3A1.0.1--heae3180_0"
+	input:
+		path fastqfiles
+	output:
+		path "${fastqfile.getSimpleName()}*"
+	"""
+		python ${projectDir}/scripts/parallel.py -i ${fastqfiles} -o /path/to/output/folder -r /path/to/reports/folder -a '-f 3 -t 2'
+	"""
+
+}
 
 
 workflow {
@@ -76,11 +106,23 @@ workflow {
 		print("No Stats - Add --with_stats to nextflow command")
 	}
 	
+
+
 	if (params.with_fastqc){
 		fastQC(c1)
 	} else {
 		print("No FastQC - Add --with_fastqc to nextflow command")
 	}
+
+
+if (params.with_fastp){
+		fastp(c1)
+	} else {
+		print("No FastP - Add --with_fastp to nextflow command")
+	}
+
+	fastp(c1)
+
 }
 
 //Luis Version
