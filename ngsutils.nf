@@ -72,9 +72,27 @@ workflow {
 
 	if (params.with_stats){
 		ngsUtils(c1)
+	} else {
+		print("No Stats - Add --with_stats to nextflow command")
 	}
 	
 	if (params.with_fastqc){
 		fastQC(c1)
+	} else {
+		print("No FastQC - Add --with_fastqc to nextflow command")
 	}
 }
+
+//Luis Version
+/*
+    if (params.with_fastqc == false && params.with_stats != false){
+       c_run = ngsutils //without brackets
+    } else if (params.with_fastqc != false && params.with_stats == false){
+        c_run = fastqc
+    } else {
+        print ("Error: Please provide either --with_fastqc or --with_stats")
+        System.exit(1)
+    }
+   
+   prefetch | split | c_run
+   */
